@@ -1,36 +1,22 @@
 using HorizonSideRobots
-HSR = HorizonSideRobots
-robot = Robot("1.sit";animate=true)
-function reverse!(side)
-    if side==Sud
-        side=Nord
-    elseif side==Nord
-        side=Sud
-    elseif side==West
-        side=Ost
-    else
-        side=West
+r = Robot("1.sit",animate=true)
+
+function mark_kross!(r::Robot)
+    for side in (Nord,West,Sud,Ost) 
+        putmarkers!(r,side)
+        move_by_markers(r,inverse(side))
     end
-    return side
+    putmarker!(r)
 end
-function along!(robot,Side)
-    k=0
-    while !isborder(robot,Side)
-        putmarker!(robot)
-        move!(robot,Side)
-        k+=1
+putmarkers!(r::Robot,side::HorizonSide) = 
+    while isborder(r,side)==false 
+        move!(r,side)
+        putmarker!(r)
     end
-    putmarker!(robot)
-    side=reverse!(Side)
-    while k>0
-        move!(robot,side)
-        k-=1
+move_by_markers(r::Robot,side::HorizonSide) = 
+    while ismarker(r)==true 
+        move!(r,side) 
     end
-end
-function kraska!(robot)
-    for i in [Sud,Nord,West,Ost]
-        along!(robot,i)
-    end
-end
-kraska!(robot)
-sleep(2)
+inverse(side::HorizonSide) = HorizonSide(mod(Int(side)+2, 4)) 
+
+mark_kross!(r)
