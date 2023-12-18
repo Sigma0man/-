@@ -28,10 +28,10 @@ function prohod( side,robot)
     side = left(side)
     cord = (Nothing,Nothing)
     
-    while cord!=(0,0) || r.t<4
+    while cord!=(0,0) || robot.t<4
         
-        side = next_move(r, side)
-        cord = move!(r, side)
+        side = next_move(robot, side)
+        cord = move!(robot, side)
     
     end 
 end
