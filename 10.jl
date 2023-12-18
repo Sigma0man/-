@@ -1,100 +1,66 @@
 using HorizonSideRobots
+r = Robot("10.sit",animate=true)
 k = parse(Int, readline())
-r = Robot("10.sit";animate=true)
-sleep(3)
-function vozvrat!(robot)
-    vniz=0
-    vlevo=0
-    while !isborder(robot,Sud)
-        vniz=vniz+1
-        move!(robot,Sud)
-    end
-    while !isborder(robot,West)
-        vlevo=vlevo+1
-        move!(robot,West)
-    end
-    return vniz,vlevo
-end
-function reverse!(side)
-    if side==Sud
-        side=Nord
-    else
-        side=Sud
-    end
-    return side
-end
-function pognali!(r,n)
-    niz,l=vozvrat!(r)
-    side=Nord
-    n=n-1
-    po=0
-    st=0
-    poi=0
-    while !isborder(r,side) && !isborder(r,Ost)
-        while !isborder(r,side)
-            if st==1 && po<n
-                putmarker!(r)
-                move!(r,side)
-                po+=1
-            elseif st==1 && po==n
-                putmarker!(r)
-                move!(r,side)
-                po=0
-                st=0
-            elseif st==0 && po<n
-                move!(r,side)
-                po+=1
-            elseif st==0 && po==n
-                move!(r,side)
-                po=0
-                st=1
-            end
-            if isborder(r,side)
-                if st==1
-                    po+=1
-                    putmarker!(r)
-                else
-                    po+=1
-                end
-                if !isborder(r,Ost)
-                    side=reverse!(side)
-                    move!(r,Ost)
-                end
-                if poi<n
-                    poi+=1
-                else
-                    poi=0
-                    if st==1
-                        st=0
-                    else
-                        st=1
-                    end
-                end
-                while po>0 && !isborder(r,side)
-                    if st==1
-                        putmarker!(r)
-                        move!(r,side)
-                        po-=1
-                    else
-                        move!(r,side)
-                        po-=1
-                    end
-                end
-                if st==1
-                    st=0
-                else
-                    st=1
-                end
-            end
+
+inverse(side::HorizonSide) = HorizonSide(mod(Int(side)+2,4))
+
+function big_chess(r::Robot,k::Int)
+    moves = go_to_reference_point(r)
+    along_chess(r,k,Ost,true)
+    go_to_reference_point(r)
+    while !isborder(r,Nord)||!isborder(r,Ost)
+        along_chess(r,k,Nord,ismarker(r))
+        along_down(r,Sud)
+        if !isborder(r,Ost)
+            move!(r,Ost)
+        else
+            break
         end
     end
-    vozvrat!(r)
-    for i in 1:niz
-        move!(r,Nord)
+    back_to_the_origins(r,moves)
+end
+function along_chess(r::Robot,k::Int,side::HorizonSide,marker::Bool)
+    while !isborder(r,side)
+        for i in 1:k
+            if marker
+                putmarker!(r)
+            end
+            if isborder(r,side)
+                break
+            else
+                move!(r,side)
+            end
+        end
+        marker = !marker   
     end
-    for ii in 1:l
-        move!(r,Ost)
+    if marker
+        putmarker!(r)
     end
 end
-pognali!(r,k)
-sleep(2)
+function along_down(r::Robot,side::HorizonSide)
+    while !isborder(r,side)
+        move!(r,side)
+    end
+end
+function go_to_reference_point(r::Robot)::Array
+    moves = []
+    while !isborder(r,West)||!isborder(r,Sud)
+        if !isborder(r,West)
+            push!(moves,Int(West))
+            move!(r,West)
+        end
+        if !isborder(r,Sud)
+            push!(moves,Int(Sud))
+            move!(r,Sud)
+        end
+    end
+    return moves
+end
+
+function back_to_the_origins(r::Robot,moves::Array)
+    go_to_reference_point(r)
+    for i in 0:length(moves)-1
+        move!(r,inverse(HorizonSide(moves[length(moves)-i])))
+    end
+end
+big_chess(r,k)
